@@ -8,7 +8,7 @@ import {  setBusinessFlights,
 import { getBusinessFlights } from '../../lib/api';
 
 function* workerGetBusinessFlights() {
-  
+ 
   const businessflights = yield call(getBusinessFlights);
   
   yield put(setBusinessFlights(businessflights.data.data));

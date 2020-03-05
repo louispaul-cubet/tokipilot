@@ -3,11 +3,12 @@ import { connect } from 'react-redux';
 import MaterialTable from 'material-table';
 import { uniqBy } from 'lodash';
 import { Formik, Form, Field, ErrorMessage } from 'formik';
-import FilterableTable from 'react-filterable-table';
+import {showLoader,hideLoader} from '../../actions/ui'
 import { getCheapFlights,getBuisnessFlights } from '../../actions';
 
 import * as Yup from 'yup';
 import styles from './styles';
+import { Loader } from 'semantic-ui-react';
 let allflightdetails=[]
   let availableplaces=[];
  
@@ -36,7 +37,7 @@ class Home extends Component {
 componentDidMount()
 {
   
-  
+  this.props.showLoader();
  
 }
   
@@ -105,7 +106,9 @@ else
   render() {
    
     if(this.props.cheapflights && this.props.businessflights)
-    {this.allflights();
+    {
+      this.allflights();
+      this.props.hideLoader();
     return (
       
       <div className="container" >
@@ -131,9 +134,9 @@ else
           
           render=  {({ errors, touched }) => (
               <Form>
-                <div class="container">
-  <div class="row">
-    <div class="col-sm">
+                <div className="container">
+  <div className="row">
+    <div className="col-sm">
      
     <label className='label-profile' htmlFor='lastName'>
                      From
@@ -149,7 +152,7 @@ else
                        
                         </Field>
     </div>
-    <div class="col-sm">
+    <div className="col-sm">
     <label className='label-profile' htmlFor='lastName'>
                      To
                       <span className='asterix'>&nbsp;&#42;</span>
@@ -163,7 +166,7 @@ else
                       })}
                         </Field>
     </div>
-    <div class="col-sm">
+    <div className="col-sm">
     <label className='label-profile' htmlFor='lastName'>
                      Class
                       <span className='asterix'>&nbsp;&#42;</span>
@@ -177,13 +180,11 @@ else
                        <option value='Business'>Business</option>
                         </Field>
     </div>
-    <div class="col-sm">
-    <label className='label-profile' htmlFor='lastName'>
-                         
-                    </label>
+    <div className="col-sm" >
+    
       <button
                     type='submit'
-                    className='form-control btn cur-p btn-success '
+                    className='form-control-button btn cur-p btn-success '
                    
                    
                   >
@@ -241,7 +242,9 @@ const mapStateToProps = state => ({
 
 const mapDispatchToProps = dispatch => ({
   getCheapFlights: () => dispatch(getCheapFlights()),
-  getBuisnessFlights:() =>dispatch(getBuisnessFlights())
+  getBuisnessFlights:() =>dispatch(getBuisnessFlights()),
+  showLoader:() =>dispatch(showLoader()),
+  hideLoader:()=>dispatch(hideLoader())
 });
 
 export default connect(mapStateToProps, mapDispatchToProps)(Home);

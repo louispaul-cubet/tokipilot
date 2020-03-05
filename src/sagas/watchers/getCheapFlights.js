@@ -6,9 +6,12 @@ import {  setCheapFlights,
   
    } from '../../actions';
 import { getCheapFlights } from '../../lib/api';
+import {showLoader,hideLoader} from '../../actions/ui'
 
 function* workerGetCheapFlights() {
+  
   const cheapflights = yield call(getCheapFlights);
+
   yield put(setCheapFlights(cheapflights.data.data));
 }
 

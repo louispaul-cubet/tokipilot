@@ -8,7 +8,7 @@ import store, { history } from './store';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import Home from './screens/Home';
 
-
+import './App.css';
 
 
 export default class App extends Component {

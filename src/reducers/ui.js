@@ -1,3 +1,7 @@
+const uiReducerDefaultState = {
+  showLoader: false,
+  
+};
 export default (state = uiReducerDefaultState, action) => {
     switch (action.type) {
       case 'SHOW_LOADER':
