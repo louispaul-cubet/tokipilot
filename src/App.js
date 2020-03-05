@@ -9,14 +9,16 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import Home from './screens/Home';
 
 import './App.css';
-
-
+import  Loader from './Common/Loader'
+import './styles.scss';
 export default class App extends Component {
   render() {
     return (
       <Provider store={store}>
         <ConnectedRouter history={history}>
+        
           <div>
+          <Loader />
             <Route exact path="/" component={Home} />
           </div>
         </ConnectedRouter>

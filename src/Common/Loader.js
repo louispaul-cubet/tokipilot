@@ -3,8 +3,9 @@ import { connect } from 'react-redux';
 import Spinner from './Spinner';
 
 export const Loader = ({ showLoader }) => (
+  
   <Fragment>
-    {showLoader && (
+    {showLoader==true && (
       <div className='uk-overlay-default uk-position-cover custom-overlay'>
         <div className='showbox'>
           <Spinner />
@@ -15,7 +16,7 @@ export const Loader = ({ showLoader }) => (
 );
 
 const mapStateToProps = (state, props) => ({
-  showLoader: state.ui.showLoader
+  showLoader: state.uiReducer.showLoader
 });
 
 export default connect(mapStateToProps)(Loader);

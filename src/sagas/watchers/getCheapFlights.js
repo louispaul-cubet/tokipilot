@@ -9,10 +9,11 @@ import { getCheapFlights } from '../../lib/api';
 import {showLoader,hideLoader} from '../../actions/ui'
 
 function* workerGetCheapFlights() {
-  
+  yield put(showLoader());
   const cheapflights = yield call(getCheapFlights);
-
+ 
   yield put(setCheapFlights(cheapflights.data.data));
+  yield put(hideLoader());
 }
 
 export default function* watchGetCheapFlights() {

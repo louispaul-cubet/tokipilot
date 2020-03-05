@@ -1,55 +1,54 @@
-import React, { Component } from 'react';
+import React, { Component,Fragment } from 'react';
 import { connect } from 'react-redux';
 import MaterialTable from 'material-table';
+import * as moment from 'moment'
 import { uniqBy } from 'lodash';
 import { Formik, Form, Field, ErrorMessage } from 'formik';
-import {showLoader,hideLoader} from '../../actions/ui'
+
 import { getCheapFlights,getBuisnessFlights } from '../../actions';
 
 import * as Yup from 'yup';
-import styles from './styles';
-import { Loader } from 'semantic-ui-react';
+
+
+import { showLoader } from '../../actions/ui';
+
 let allflightdetails=[]
   let availableplaces=[];
  
-  // Data for the table to display; can be anything
+
   
 
-// Fields to show in the table, and what object properties in the data they bind to
-const fields = [
-    { name: 'departure', displayName: "From", inputFilterable: true, sortable: true },
-    { name: 'arrival', displayName: "To", inputFilterable: true, exactFilterable: true, sortable: true },
-    { name: 'departureTime', displayName: "Departure Time", inputFilterable: true, exactFilterable: true, sortable: true },
-    { name: 'arrivalTime', displayName: "Arrival Time", inputFilterable: true, exactFilterable: true, sortable: true },
-    { name: 'class', displayName: "Class", inputFilterable: true, exactFilterable: true, sortable: true }
-];
+
+
 class Home extends Component {
   constructor(props) {
     super(props);
     
-    this.props.getCheapFlights();
-  this.props.getBuisnessFlights();
+    
     this.state={
-      flights:[],
-      
+      departureflights:[],
+      returnflights:[],
+      nodata:false
     }
   }
 componentDidMount()
 {
   
-  this.props.showLoader();
- 
+  
+  this.props.getCheapFlights();
+  this.props.getBuisnessFlights();
 }
   
   allflights()
   {allflightdetails=[];
     this.props.cheapflights.map(flights=>{
       let arrivalanddeparture=flights.route.split('-')
-      allflightdetails.push({arrival:arrivalanddeparture[0],
-       departure:arrivalanddeparture[1],
+      
+      allflightdetails.push({arrival:arrivalanddeparture[1],
+       departure:arrivalanddeparture[0],
        class:'Cheap',
-       arrivalTime:flights.arrival,
-       departureTime:flights.departure
+       arrivalTime:moment(parseInt(flights.arrival)*1000).format('DD-MM-YYYY, h:mm '),
+       departureTime:moment(parseInt(flights.arrival)*1000).format('DD-MM-YYYY, h:mm ')
    
      }
         
@@ -64,8 +63,8 @@ componentDidMount()
           arrival:flightsdetails.arrival,
           departure:flightsdetails.departure,
           class:'Business',
-          arrivalTime:flightsdetails.arrivalTime,
-          departureTime:flightsdetails.departureTime
+          arrivalTime:moment(parseInt(flightsdetails.arrivalTime)*1000).format('DD-MM-YYYY, h:mm'),
+          departureTime:moment(parseInt(flightsdetails.departureTime)*1000).format('DD-MM-YYYY, h:mm')
            
          }
        )
@@ -81,24 +80,58 @@ componentDidMount()
   
   }
   search(values)
-  {this.setState({flights:[]});
-  let flightsavailable=[];
-  console.log(values.class);
+  {this.setState({departureflights:[]});
+  this.setState({returnflights:[]})
+  let flightsavailabledeparture=[];
+  let flightsavailablereturn=[];
 if(values.class=='All')
-{console.log(values);
-  flightsavailable=allflightdetails.filter(flights=>flights.arrival==values.from 
-    && flights.departure==values.to
+{
+  flightsavailabledeparture=allflightdetails.filter(flights=>flights.arrival==values.to 
+    && flights.departure==values.from
      )
-     console.log(flightsavailable);
-  this.setState({flights:flightsavailable})
+     flightsavailablereturn=allflightdetails.filter(flights=>flights.arrival==values.from
+      && flights.departure==values.to
+       )
+     
+  this.setState({ departureflights:flightsavailabledeparture})
+  this.setState({returnflights:flightsavailablereturn})
+  
+  if(flightsavailabledeparture.length===0)
+  {
+    this.setState({nodata:true})
+  }
+  else if(flightsavailablereturn.length===0)
+  {
+    this.setState({nodata:true})
+  }
+  else
+  {
+    this.setState({nodata:false})
+  }
 }
 else
 {
-  flightsavailable=allflightdetails.filter(flights=>flights.arrival==values.from 
-    && flights.departure==values.to
+  flightsavailabledeparture=allflightdetails.filter(flights=>flights.arrival==values.to
+    && flights.departure==values.from
      && flights.class==values.class)
-     console.log(flightsavailable);
-  this.setState({flights:flightsavailable})
+     flightsavailablereturn=allflightdetails.filter(flights=>flights.arrival==values.from
+      && flights.departure==values.to && flights.class==values.class
+       )
+  
+     this.setState({ departureflights:flightsavailabledeparture})
+     this.setState({returnflights:flightsavailablereturn})
+     if(flightsavailabledeparture.length===0)
+  {
+    this.setState({nodata:true})
+  }
+  else if(flightsavailablereturn.length===0)
+  {
+    this.setState({nodata:true})
+  }
+  else
+  {
+    this.setState({nodata:false})
+  }
 }
     
   }
@@ -108,7 +141,7 @@ else
     if(this.props.cheapflights && this.props.businessflights)
     {
       this.allflights();
-      this.props.hideLoader();
+      
     return (
       
       <div className="container" >
@@ -117,15 +150,14 @@ else
               '#': '',
               from:'',
               to:'',
-              class:''
+              class:'All'
             }}
             validationSchema={Yup.object().shape({
               from: Yup.string()
                   .required('From Location is required'),
               to: Yup.string()
                   .required('To Location is required'),
-             class:Yup.string()
-                  .required('Class is required')
+            
                 })}
 
             onSubmit={values => {
@@ -145,12 +177,15 @@ else
                  <Field component='select'
                       name='from'
                       className='form-control'>
-                         <option value='' disabled={true}> </option>
-                      {availableplaces.map(value => {
-                        return <option value={value.places}>{value.places}</option>;
+                         <option value='' disabled={true} key='null' > </option>
+                      {availableplaces.map((value,index) => {
+                        return <option value={value.places} key={index+1}>{value.places}</option>;
                       })}
                        
                         </Field>
+                        {errors.from && touched.from  ? (
+                      <div className='error-txt'>Required</div>
+                    ) : null}
     </div>
     <div className="col-sm">
     <label className='label-profile' htmlFor='lastName'>
@@ -160,11 +195,14 @@ else
                         <Field component='select'
                       name='to'
                       className='form-control'>
-                         <option value='' disabled={true}> </option>
-                      {availableplaces.map(value => {
-                        return <option value={value.places}>{value.places}</option>;
+                         <option value='' disabled={true} key='0'> </option>
+                      {availableplaces.map((value,index) => {
+                        return <option value={value.places} key={index+1}>{value.places}</option>;
                       })}
                         </Field>
+                        {errors.to && touched.to  ? (
+                      <div className='error-txt'>Required</div>
+                    ) : null}
     </div>
     <div className="col-sm">
     <label className='label-profile' htmlFor='lastName'>
@@ -174,7 +212,7 @@ else
                         <Field component='select'
                       name='class'
                       className='form-control'>
-                        <option value='' disabled={true}> </option>
+                       
                         <option value='All'>All</option>
                        <option value='Cheap'>Cheap</option>
                        <option value='Business'>Business</option>
@@ -201,7 +239,7 @@ else
             
             />
        
-      { this.state.flights.length>0 && (<div style={{ maxWidth: '100%' }}> <MaterialTable
+      { this.state.departureflights.length>0 && (<div style={{ maxWidth: '100%',marginTop:'20px' }}> <MaterialTable
         
         columns={[
           { title: 'From', field: 'departure' },
@@ -218,33 +256,95 @@ else
            
           }
         ]}
-        title="Flight Details"
-        data={this.state.flights}        
+        title="Departure Flight Details"
+        data={this.state.departureflights}        
         
       />
       </div>)}
+      { this.state.nodata==true && this.state.departureflights.length==0 &&(<div style={{ maxWidth: '100%',marginTop:'20px' }}> <MaterialTable
         
+        columns={[
+          { title: 'From', field: 'arrival' },
+          { title: 'To', field: 'departure' },
+          { title: 'Departure Time', field: 'departureTime' },
+          {
+            title: 'Arrival Time',
+            field: 'arrivalTime',
+           
+          },
+          {
+            title: 'Class',
+            field: 'class',
+           
+          }
+        ]}
+        title="Departure Flight Details"
+               />
+      </div>)}
+      
+      { this.state.returnflights.length>0 && (<div style={{ maxWidth: '100%',marginTop:'20px' }}> <MaterialTable
         
+        columns={[
+          { title: 'From', field: 'departure' },
+          { title: 'To', field: 'arrival' },
+          { title: 'Departure Time', field: 'departureTime' },
+          {
+            title: 'Arrival Time',
+            field: 'arrivalTime',
+           
+          },
+          {
+            title: 'Class',
+            field: 'class',
+           
+          }
+        ]}
+        title="Return Flight Details"
+        data={this.state.returnflights}        
+        
+      />
+      </div>)}
+      { this.state.nodata==true && this.state.returnflights.length==0 && (<div style={{ maxWidth: '100%',marginTop:'20px' }}> <MaterialTable
+        
+        columns={[
+          { title: 'From', field: 'departure' },
+          { title: 'To', field: 'arrival' },
+          { title: 'Departure Time', field: 'departureTime' },
+          {
+            title: 'Arrival Time',
+            field: 'arrivalTime',
+           
+          },
+          {
+            title: 'Class',
+            field: 'class',
+           
+          }
+        ]}
+        title="Return Flight Details"
+               />
+      </div>)}
       </div>
     );
+    
       }
       else
       {
-        return(<div></div>)
+        return( <div></div>)
       }
   }
 }
 
 const mapStateToProps = state => ({
  cheapflights:state.flightReducer.cheapflights,
- businessflights:state.flightReducer.businessflights
+ businessflights:state.flightReducer.businessflights,
+ showLoader:state.uiReducer.showLoader
 });
 
 const mapDispatchToProps = dispatch => ({
   getCheapFlights: () => dispatch(getCheapFlights()),
   getBuisnessFlights:() =>dispatch(getBuisnessFlights()),
-  showLoader:() =>dispatch(showLoader()),
-  hideLoader:()=>dispatch(hideLoader())
+  
 });
 
 export default connect(mapStateToProps, mapDispatchToProps)(Home);
